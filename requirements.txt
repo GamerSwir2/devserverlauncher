@@ -1,0 +1,10 @@
+nicegui
+pythonnet
+pywebview
+meson
+pycairo
+pygobject
+crossfiledialog
+easygui
+pywin32
+psutil
