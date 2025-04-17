@@ -21,7 +21,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='[%(asctime)s] [%(levelname)s] -> %(message)s',
     handlers=[
-        logging.handlers.TimedRotatingFileHandler(os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher.log')),
+        logging.handlers.TimedRotatingFileHandler(os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher')),
         logging.StreamHandler()
     ]
 )
@@ -178,7 +178,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
         logging.debug("Final osu_path set to: %s", pathdir)
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
+        
         loadosu = True
         logging.debug("Entering launch loop")
         while loadosu:
@@ -209,6 +209,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
             rp_injected = False
             presentosu = False
             osucheckexecuted = False
+            tried = 0
 
             while proc.poll() is None:
                 try:
@@ -273,19 +274,32 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                         except Exception as e:
                             logging.error("Patch error: %s", e)
 
-                    if not osucheckexecuted:
-                        for i in range(4):
-                            if util.is_osu_window_present():
-                                presentosu = True
-                                logging.info("osu! present")
-                                osucheckexecuted = True
-                                await asyncio.sleep(0.1)
-                            else:
-                                if not util.is_osu_loading_window_present():
-                                    presentosu = False
-                                    logging.info("osu! not present")
-                                    await asyncio.sleep(0.1)
-                                    break
+                                        
+                    MAIN_WINDOW_TIMEOUT = 10
+                    start_time = time.time()
+
+                    while proc.poll() is None:
+                        elapsed = time.time() - start_time
+                        if elapsed > MAIN_WINDOW_TIMEOUT:
+                            logging.error(f"osu! main window did not appear after {MAIN_WINDOW_TIMEOUT}s")
+                            break
+
+                        if util.is_osu_updater_present():
+                            logging.warning("osu! auto‑updater still running; waiting for it to finish")
+                        elif util.is_osu_loading_window_present():
+                            logging.info("osu! loading stub detected; still booting")
+                        elif util.is_osu_main_window_present():
+                            logging.info("osu! main window detected")
+                            presentosu = True
+                            break
+                        else:
+                            logging.debug("no osu! windows found yet")
+
+                        await asyncio.sleep(0.5)
+
+                    if not presentosu:
+                        logging.error("Failed to detect osu! main window — will restart launch")
+
                 except Exception as loop_err:
                     logging.exception("Error in launch monitoring loop")
                 await asyncio.sleep(0.5)

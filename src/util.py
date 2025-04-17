@@ -24,15 +24,51 @@ IDNO = 7
 
 user32 = ctypes.windll.user32
 
-def is_osu_window_present():
-    for window in gw.getAllTitles():
-        if "osu!" in window.lower() and "updater" not in window.lower():
+import win32gui
+import win32process
+import psutil
+
+def _enum_osu_windows():
+    results = []
+
+    def _cb(hwnd, _):
+        if not win32gui.IsWindowVisible(hwnd):
+            return True
+
+        title = win32gui.GetWindowText(hwnd) or ""
+        classname = win32gui.GetClassName(hwnd) or ""
+        low_t = title.lower()
+        low_c = classname.lower()
+
+        if "osu!" in low_t or "osu!" in low_c:
+            _, pid = win32process.GetWindowThreadProcessId(hwnd)
+            results.append((hwnd, pid, title, classname))
+        return True
+
+    win32gui.EnumWindows(_cb, None)
+    return results
+
+def is_osu_updater_present():
+    for hwnd, pid, title, classname in _enum_osu_windows():
+        lt = title.lower()
+        if "updater" in lt:
             return True
     return False
+
 def is_osu_loading_window_present():
-    for window in gw.getAllTitles():
-        if "osu!" in window.lower() and "(loading)" in window.lower():
+    for hwnd, pid, title, classname in _enum_osu_windows():
+        lt = title.lower()
+        if "(loading)" in lt:
             return True
+    return False
+
+def is_osu_main_window_present():
+    for hwnd, pid, title, classname in _enum_osu_windows():
+        lt = title.lower()
+        lc = classname.lower()
+        if "updater" not in lt and "(loading)" not in lt:
+            if lc == "osu!" or lt.startswith("osu!"):
+                return True
     return False
 def win_message_box(message, title, style):
     hwnd = ctypes.windll.user32.GetForegroundWindow()
