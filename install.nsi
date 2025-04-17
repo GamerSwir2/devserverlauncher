@@ -85,7 +85,7 @@ skip_remove_old_data:
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "UninstallString" "$INSTDIR\uninstall.exe"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "InstallLocation" "$INSTDIR"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "DisplayIcon" "$INSTDIR\m1pplauncher.exe"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "Publisher" "YourPublisherName"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "Publisher" "M1PPosu"
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "NoModify" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "NoRepair" 1
 SectionEnd

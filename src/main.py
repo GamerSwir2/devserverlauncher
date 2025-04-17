@@ -7,7 +7,6 @@ import ctypes
 import webbrowser
 from pathlib import Path
 import psutil
-import crossfiledialog
 import nicegui as ng
 from nicegui import app, ui
 import configmanager
@@ -22,7 +21,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='[%(asctime)s] [%(levelname)s] -> %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher.log')),
+        logging.FileHandler(os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher.log'), mode='w'),
         logging.StreamHandler()
     ]
 )
@@ -209,16 +208,10 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
             tosu_injected = False
             rp_injected = False
             presentosu = False
+            osucheckexecuted = False
 
             while proc.poll() is None:
                 try:
-                    for i in range(2):
-                        if util.is_osu_window_present():
-                            presentosu = True
-                            await asyncio.sleep(0.1)
-                        else:
-                            presentosu = False
-                            break
                     process = None
                     for p in psutil.process_iter(['pid','name']):
                         if p.info['name'] and p.info['name'].lower() == 'osu!.exe':
@@ -275,16 +268,27 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                             logging.debug("RelaxPatcher output: %s", out)
                             if out and "Written to " in out:
                                 rp_injected = True
+                            if "System.Exception" in out:
+                                patcher_proc.kill()
                         except Exception as e:
                             logging.error("Patch error: %s", e)
-                        finally:
-                            patcher_proc.kill()
 
+                    if not osucheckexecuted:
+                        for i in range(4):
+                            if util.is_osu_window_present():
+                                presentosu = True
+                                logging.info("osu! present")
+                                osucheckexecuted = True
+                                await asyncio.sleep(0.1)
+                            else:
+                                if not util.is_osu_loading_window_present():
+                                    presentosu = False
+                                    logging.info("osu! not present")
+                                    await asyncio.sleep(0.1)
+                                    break
                 except Exception as loop_err:
                     logging.exception("Error in launch monitoring loop")
                 await asyncio.sleep(0.5)
-
-            await asyncio.sleep(0.01)
 
             logging.debug("Launch loop exited, cleaning up processes")
             for p in psutil.process_iter(['pid','name']):

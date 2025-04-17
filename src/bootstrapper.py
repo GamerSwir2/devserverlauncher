@@ -182,7 +182,7 @@ async def async_bootstrap_osu(destination_folder):
                 )
                 if not os.path.exists(os.path.join(destination_folder, "tosu.env")):
                     with open(os.path.join(destination_folder, "tosu.env"), "w") as f:
-                        f.write(requests.get("https://raw.githubusercontent.com/4ayo-ovh/tosu/refs/heads/master/tosu.env"))
+                        f.write(requests.get("https://raw.githubusercontent.com/4ayo-ovh/tosu/refs/heads/master/tosu.env").text)
                 
 
         if "RelaxPatcher" in enabled_mods:

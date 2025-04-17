@@ -26,10 +26,14 @@ user32 = ctypes.windll.user32
 
 def is_osu_window_present():
     for window in gw.getAllTitles():
-        if "osu!" in window.lower() and "(loading)" not in window.lower() and "updater" not in window.lower():
+        if "osu!" in window.lower() and "updater" not in window.lower():
             return True
     return False
-
+def is_osu_loading_window_present():
+    for window in gw.getAllTitles():
+        if "osu!" in window.lower() and "(loading)" in window.lower():
+            return True
+    return False
 def win_message_box(message, title, style):
     hwnd = ctypes.windll.user32.GetForegroundWindow()
     ctypes.windll.user32.SetForegroundWindow(hwnd)
