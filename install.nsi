@@ -12,18 +12,25 @@ Name "M1PP Launcher"
 OutFile "m1pplauncher-setup.exe"
 InstallDir "$PROGRAMFILES\M1PPLauncher"
 InstallDirRegKey HKLM "Software\M1PP Launcher" "InstallDir"
-Icon "src\icon.ico"
-UninstallIcon "src\icon.ico"
+Icon "icon.ico"
+UninstallIcon "icon.ico"
+SetCompressor /SOLID lzma
+BrandingText " "
 RequestExecutionLevel admin
 
 ;--------------------------------
 ; Pages
 ;--------------------------------
+!define MUI_HEADERIMAGE
+!define MUI_HEADERIMAGE_BITMAP "banner.bmp"
+!define MUI_ICON "icon.ico"
 !insertmacro MUI_PAGE_DIRECTORY
+; !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 Page Custom RemoveOldDataPageCreate RemoveOldDataPageLeave
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
+
 
 ;--------------------------------
 ; Variables
@@ -54,13 +61,16 @@ FunctionEnd
 ;--------------------------------
 Section "Install M1PP Launcher" SEC01
     SetOutPath "$INSTDIR"
-
+    SetRegView 64
     StrCmp $RemoveOldData "1" remove_old_data skip_remove_old_data
 remove_old_data:
+    nsExec::Exec '"cmd.exe /c del "$LOCALAPPDATA\osu!m1pp\osu!.db"'
+    nsExec::Exec '"cmd.exe /c rmdir "$LOCALAPPDATA\osu!m1pp\Songs"'
+    nsExec::Exec '"cmd.exe /c rmdir "$LOCALAPPDATA\osu!m1pp\Skins"'
     RMDir /r "$LOCALAPPDATA\osu!m1pp"
     Delete "$LOCALAPPDATA\m1pposu_config.json"
 skip_remove_old_data:
-
+    SetRegView 64
     File "dist\m1pplauncher\m1pplauncher.exe"
     SetOutPath "$INSTDIR\_internal"
     File /r "dist\m1pplauncher\_internal\*.*"
@@ -76,7 +86,6 @@ skip_remove_old_data:
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "InstallLocation" "$INSTDIR"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "DisplayIcon" "$INSTDIR\m1pplauncher.exe"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "Publisher" "YourPublisherName"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "DisplayVersion" "1.0.0"
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "NoModify" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "NoRepair" 1
 SectionEnd
@@ -85,6 +94,7 @@ SectionEnd
 ; Uninstallation Section
 ;--------------------------------
 Section "Uninstall"
+    SetRegView 64
     Delete "$INSTDIR\m1pplauncher.exe"
     RMDir /r "$INSTDIR\_internal"
     Delete "$DESKTOP\M1PP Launcher.lnk"

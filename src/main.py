@@ -16,7 +16,16 @@ import requests
 import atexit
 import bootstrapper
 import time
+import logging
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='[%(asctime)s] [%(levelname)s] -> %(message)s',
+    handlers=[
+        logging.FileHandler(os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher.log')),
+        logging.StreamHandler()
+    ]
+)
 
 app.middleware_stack = None
 app.native.window_args['resizable'] = False
@@ -127,64 +136,80 @@ def toggle_mod(name, value):
 
 
 async def launch_osu(tabs, ssel, lbtn, progress_label):
+    logging.info("Starting osu!")
     try:
+        logging.debug("Disabling launch button and freezing tabs")
         lbtn.disable()
         set_tab_change_state(tabs, ssel, False)
 
         osu_path = configmanager.get_config_value("osu_path")
+        logging.debug("Configured osu_path: %s", osu_path)
         osu_exe = os.path.join(osu_path, "osu!.exe")
         if not os.path.isfile(osu_exe):
+            logging.warning("osu!.exe not found at %s, attempting default path", osu_exe)
             try:
                 selected_folder = bootstrapper.default_game_path
+                logging.debug("Default game path: %s", selected_folder)
                 os.makedirs(selected_folder, exist_ok=True)
                 if not selected_folder:
+                    logging.error("Invalid default folder: %r", selected_folder)
                     util.win_message_box("Invalid folder", 'Error', util.MB_OK | util.MB_ICONERROR)
                     return
 
                 if not os.listdir(selected_folder):
                     configmanager.set_config_value("osu_path", selected_folder)
                     osu_path = selected_folder
+                    logging.info("Updated osu_path to default empty folder: %s", selected_folder)
                 else:
+                    logging.error("Default folder not empty: %s", selected_folder)
                     util.win_message_box(
-                        "The {}\\osu!m1pp folder has to be empty".format(os.getenv("LOCALAPPDATA")), 'Error', util.MB_OK | util.MB_ICONERROR
+                        "The {}\\osu!m1pp folder has to be empty".format(os.getenv("LOCALAPPDATA")),
+                        'Error', util.MB_OK | util.MB_ICONERROR
                     )
                     return
             except Exception as err:
+                logging.exception("Error creating or accessing default folder %s", selected_folder)
                 util.win_message_box(
-                    "This location is inaccessible (no write permission)\n\n" + err,
+                    "This location is inaccessible (no write permission)\n\n" + str(err),
                     'Error', util.MB_OK | util.MB_ICONERROR
                 )
                 return
 
-        # prepare for launching
         pathdir = configmanager.get_config_value("osu_path")
+        logging.debug("Final osu_path set to: %s", pathdir)
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
         loadosu = True
+        logging.debug("Entering launch loop")
         while loadosu:
             progress_label.set_text('Bootstraping osu!...')
+            logging.info("Bootstrapping osu at %s", pathdir)
             pathdir = configmanager.get_config_value("osu_path")
             res = await bootstrapper.async_bootstrap_osu(pathdir)
+            logging.debug("Bootstrap result: %s", res)
             if res == 1:
-                # user cancelled or bootstrapper signaled abort
+                logging.info("Bootstrap cancelled (result code 1)")
                 return
 
             progress_label.set_text('Launching osu!...')
+            server = configmanager.get_config_value("selected_server")
+            logging.info("Launching osu!.exe with devserver %s", server)
             proc = subprocess.Popen(
                 [os.path.join(pathdir, "osu!.exe"),
-                 "-devserver", configmanager.get_config_value("selected_server")],
+                 "-devserver", server],
                 cwd=pathdir,
                 startupinfo=startupinfo
             )
+            logging.debug("Started osu process with PID=%s", getattr(proc, 'pid', None))
             if configmanager.get_config_value("launcher_hide_startup"):
+                logging.debug("Hiding M1PP Launcher window on startup")
                 set_window_visibility("M1PP Launcher", False)
-            # reset our flags per‐launch
+
             tosu_injected = False
             rp_injected = False
             presentosu = False
 
-            # wait for osu! to appear, or for the process to exit
             while proc.poll() is None:
                 try:
                     for i in range(2):
@@ -200,8 +225,8 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                             process = p
                             break
 
-                    # if we didn’t see the process yet, wait up to 10 s then give up this launch
                     if not process:
+                        logging.warning("osu!.exe process not found, attempting retry loop")
                         timeout_start = time.time()
                         while (time.time() - timeout_start) < 10 and not process:
                             await asyncio.sleep(0.5)
@@ -210,13 +235,13 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                                     process = p
                                     break
                         if not process:
-                            print("osu!.exe process not found. Restarting launch.")
+                            logging.error("osu!.exe process still not found after timeout, restarting launch")
                             break
 
-                    # once we have a process, check its cmdline for the right server
                     if process:
                         cmd = process.cmdline()
                         if configmanager.get_config_value("selected_server") not in cmd:
+                            logging.warning("Detected osu! update: server arg missing in command line %s", cmd)
                             util.win_message_box(
                                 'osu! has updated. Please launch the game again.',
                                 'osu! update',
@@ -225,17 +250,17 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                             loadosu = False
                             break
 
-                    # inject tosu.exe if enabled
                     mods = configmanager.get_config_value("mods_enabled")
                     if "tosu" in mods and not tosu_injected:
+                        logging.info("Injecting tosu.exe")
                         subprocess.Popen(
                             [os.path.join(pathdir, "tosu.exe")],
                             cwd=pathdir,
                             startupinfo=startupinfo
                         )
                         tosu_injected = True
-                    # inject RelaxPatcher if enabled
                     if "RelaxPatcher" in mods and not rp_injected:
+                        logging.info("Injecting RelaxPatcher")
                         patcher_proc = subprocess.Popen(
                             [os.path.join(pathdir, "relaxpatcher", "osu!.patcher.exe")],
                             cwd=pathdir,
@@ -244,39 +269,38 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                             stderr=subprocess.PIPE,
                             text=True
                         )
-                        
                         try:
-                            # read its output once to verify it runs without exception
+                            await asyncio.sleep(0.1)
                             out = patcher_proc.stdout.readline()
-                            if out and "System.Exception" not in out and out != "\n":
-                                print("RelaxPatcher output: ", out)
+                            logging.debug("RelaxPatcher output: %s", out)
+                            if out and "Written to " in out:
                                 rp_injected = True
                         except Exception as e:
-                            print(f"Patch error: {e}")
+                            logging.error("Patch error: %s", e)
                         finally:
                             patcher_proc.kill()
 
-                except Exception:
-                    pass
-
+                except Exception as loop_err:
+                    logging.exception("Error in launch monitoring loop")
                 await asyncio.sleep(0.5)
 
             await asyncio.sleep(0.01)
 
+            logging.debug("Launch loop exited, cleaning up processes")
             for p in psutil.process_iter(['pid','name']):
                 name = (p.info['name'] or '').lower()
                 if name in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe'):
                     try:
-                        print(f"Killing process PID={p.pid} Name={p.info['name']}")
+                        logging.debug("Killing process PID=%d Name=%s", p.pid, p.info['name'])
                         p.kill()
-                    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                        pass
+                    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as kill_err:
+                        logging.warning("Failed to kill process PID=%d: %s", p.pid, kill_err)
 
-            # if we saw the real osu! window, exit retry loop; otherwise, keep looping
             if presentosu:
                 loadosu = False
 
     except Exception as err:
+        logging.exception(f"Unable to launch the game: {err}")
         util.win_message_box(
             f'We were unable to launch the game. Please contact support and provide the following information:\n\n{err}',
             'Unable to launch',
@@ -285,10 +309,12 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
         loadosu = False
 
     finally:
+        logging.debug("Re-enabling launch button and restoring UI state")
         lbtn.enable()
         progress_label.set_text('')
         set_tab_change_state(tabs, ssel, True)
         if configmanager.get_config_value("launcher_hide_startup"):
+            logging.debug("Restoring M1PP Launcher window visibility")
             set_window_visibility("M1PP Launcher", True)
 
 def set_tab_change_state(tabs, ssel, state):

@@ -28,7 +28,7 @@ async def open_file_dialog(game_path):
 
         directory = await asyncio.to_thread(
             crossfiledialog.choose_folder,
-            title="Select the osu! installation folder",
+            title="Select your existing osu! folder",
         )
 
     osu_exe_path = os.path.join(directory, "osu!.exe")
@@ -180,11 +180,15 @@ async def async_bootstrap_osu(destination_folder):
                     destination_folder,
                     tmpdir
                 )
+                if not os.path.exists(os.path.join(destination_folder, "tosu.env")):
+                    with open(os.path.join(destination_folder, "tosu.env"), "w") as f:
+                        f.write(requests.get("https://raw.githubusercontent.com/4ayo-ovh/tosu/refs/heads/master/tosu.env"))
+                
 
         if "RelaxPatcher" in enabled_mods:
             if not os.path.exists(os.path.join(destination_folder, "relaxpatcher", "osu!.patcher.exe")):
                 await download_and_extract(
-                    "https://github.com/4ayo-ovh/osu-patcher/releases/download/Slim/relaxpatcher.zip",
+                    "https://github.com/4ayo-ovh/osu-patcher/releases/latest/download/relaxpatcher.zip",
                     "relaxpatcher.zip",
                     destination_folder,
                     tmpdir
