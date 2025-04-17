@@ -8,3 +8,4 @@ crossfiledialog
 easygui
 pywin32
 psutil
+pygetwindow

@@ -13,7 +13,10 @@ from nicegui import app, ui
 import configmanager
 import util
 import requests
+import atexit
 import bootstrapper
+import time
+
 
 app.middleware_stack = None
 app.native.window_args['resizable'] = False
@@ -72,22 +75,16 @@ def validate_config():
 
 app.on_startup(validate_config)
 
-def open_file_dialog():
-    os.makedirs(bootstrapper.default_game_path, exist_ok=True)
-    response = util.win_message_box(
-        'Do you want to choose a folder to install osu!?\n\nIf you choose "No", the default folder will be used.\n\n',
-        'Question',
-        util.MB_YESNO
-    )
-    if response == 7:
-        return bootstrapper.default_game_path
-    directory = crossfiledialog.choose_folder(title="Select a folder")
-    return directory
 
-async def select_file():
-    loop = asyncio.get_running_loop()
-    file_path = await loop.run_in_executor(None, open_file_dialog)
-    return file_path
+def cleanup():
+    for p in psutil.process_iter(['pid','name']):
+        name = (p.info['name'] or '').lower()
+        if name in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe'):
+            try:
+                print(f"Killing process PID={p.pid} Name={p.info['name']}")
+                p.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
 
 def on_tab_change(event):
     global can_edit_settings
@@ -131,131 +128,161 @@ def toggle_mod(name, value):
 
 async def launch_osu(tabs, ssel, lbtn, progress_label):
     try:
-        lbtn.disable() 
-
+        lbtn.disable()
         set_tab_change_state(tabs, ssel, False)
 
         osu_path = configmanager.get_config_value("osu_path")
         osu_exe = os.path.join(osu_path, "osu!.exe")
         if not os.path.isfile(osu_exe):
-            progress_label.set_text('Please select a folder to install osu!')
-            loop = asyncio.get_running_loop()
-            selected_folder = await select_file()
-            if not selected_folder:
-                util.win_message_box(
-                    "No folder selected",
-                    'Error',
-                    util.MB_OK
-                )
-                return
-            if os.access(selected_folder, os.W_OK):
+            try:
+                selected_folder = bootstrapper.default_game_path
+                os.makedirs(selected_folder, exist_ok=True)
+                if not selected_folder:
+                    util.win_message_box("Invalid folder", 'Error', util.MB_OK | util.MB_ICONERROR)
+                    return
+
                 if not os.listdir(selected_folder):
                     configmanager.set_config_value("osu_path", selected_folder)
+                    osu_path = selected_folder
                 else:
                     util.win_message_box(
-                        "The target folder has to be empty",
-                        'Error',
-                        util.MB_OK
+                        "The {}\\osu!m1pp folder has to be empty".format(os.getenv("LOCALAPPDATA")), 'Error', util.MB_OK | util.MB_ICONERROR
                     )
                     return
-            else:
+            except Exception as err:
                 util.win_message_box(
-                    "This location is inaccessible (no write permission)",
-                    'Error',
-                    util.MB_OK
+                    "This location is inaccessible (no write permission)\n\n" + err,
+                    'Error', util.MB_OK | util.MB_ICONERROR
                 )
                 return
-        progress_label.set_text('Bootstraping osu!...')
+
+        # prepare for launching
         pathdir = configmanager.get_config_value("osu_path")
-        res = await bootstrapper.async_bootstrap_osu(pathdir)
-        if res == 1:
-            return
-        progress_label.set_text('Launching osu!...')
-        proc = subprocess.Popen([os.path.join(pathdir, "osu!.exe"), "-devserver", configmanager.get_config_value("selected_server")], cwd=pathdir)
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        if configmanager.get_config_value("launcher_hide_startup"):
-            set_window_visibility("M1PP Launcher", False)
-        tosu_injected = False
-        rp_injected = False
-        while proc.poll() is None:
-            try:
-                process = None
-                for procs in psutil.process_iter(['pid', 'name']):
-                    if procs.info['name'] and procs.info['name'].lower() == 'osu!.exe':
-                        process = procs
-                        break
-                if not process:
-                    break
+        loadosu = True
+        while loadosu:
+            progress_label.set_text('Bootstraping osu!...')
+            pathdir = configmanager.get_config_value("osu_path")
+            res = await bootstrapper.async_bootstrap_osu(pathdir)
+            if res == 1:
+                # user cancelled or bootstrapper signaled abort
+                return
 
-                current_cmdline = process.cmdline()
-                if configmanager.get_config_value("selected_server") not in current_cmdline:
-                    util.win_message_box(
-                        'osu! has updated. Please launch the game again.',
-                        'osu! update',
-                        util.MB_OK
-                    )
-                    break
-                else:
-                    mods_enabled = configmanager.get_config_value("mods_enabled")
-                    if not tosu_injected:
-                        if "tosu" in mods_enabled:
-                            tosu_proc = subprocess.Popen([os.path.join(pathdir, "tosu.exe")], cwd=pathdir, startupinfo=startupinfo)
-                            tosu_injected = True
-                    if not rp_injected:
-                        if "RelaxPatcher" in mods_enabled:
-                            for procx in psutil.process_iter(['pid', 'name']):
-                                if procx.info['name'] and procx.info['name'].lower() == 'osu!.patcher.exe':
-                                    continue
-                            patcher_proc = subprocess.Popen(
-                                [os.path.join(pathdir, "relaxpatcher", "osu!.patcher.exe")],
-                                cwd=pathdir,
-                                startupinfo=startupinfo,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                text=True
+            progress_label.set_text('Launching osu!...')
+            proc = subprocess.Popen(
+                [os.path.join(pathdir, "osu!.exe"),
+                 "-devserver", configmanager.get_config_value("selected_server")],
+                cwd=pathdir,
+                startupinfo=startupinfo
+            )
+            if configmanager.get_config_value("launcher_hide_startup"):
+                set_window_visibility("M1PP Launcher", False)
+            # reset our flags per‐launch
+            tosu_injected = False
+            rp_injected = False
+            presentosu = False
+
+            # wait for osu! to appear, or for the process to exit
+            while proc.poll() is None:
+                try:
+                    for i in range(2):
+                        if util.is_osu_window_present():
+                            presentosu = True
+                            await asyncio.sleep(0.1)
+                        else:
+                            presentosu = False
+                            break
+                    process = None
+                    for p in psutil.process_iter(['pid','name']):
+                        if p.info['name'] and p.info['name'].lower() == 'osu!.exe':
+                            process = p
+                            break
+
+                    # if we didn’t see the process yet, wait up to 10 s then give up this launch
+                    if not process:
+                        timeout_start = time.time()
+                        while (time.time() - timeout_start) < 10 and not process:
+                            await asyncio.sleep(0.5)
+                            for p in psutil.process_iter(['pid','name']):
+                                if p.info['name'] and p.info['name'].lower() == 'osu!.exe':
+                                    process = p
+                                    break
+                        if not process:
+                            print("osu!.exe process not found. Restarting launch.")
+                            break
+
+                    # once we have a process, check its cmdline for the right server
+                    if process:
+                        cmd = process.cmdline()
+                        if configmanager.get_config_value("selected_server") not in cmd:
+                            util.win_message_box(
+                                'osu! has updated. Please launch the game again.',
+                                'osu! update',
+                                util.MB_OK | util.MB_ICONINFORMATION
                             )
-                            try:
-                                # Very shitty way to check if the patcher is running, it works tho
-                                # I tried other ways, but they didn't work
-                                # need 2 change this some day 
-                                while True:
-                                    output = patcher_proc.stdout.readline()
-                                    if output == '' and patcher_proc.poll() is not None:
-                                        break
-                                    if not "System.Exception" in output:
-                                        rp_injected = True
-                                    else:
-                                        patcher_proc.kill()
-                                for line in patcher_proc.stderr:
-                                    if not "System.Exception" in line:
-                                        rp_injected = True
-                                    else:
-                                        patcher_proc.kill()
-                            except Exception as e:
-                                print(f"Error: {e}")
-                            finally:
-                                patcher_proc.kill()
+                            loadosu = False
+                            break
+
+                    # inject tosu.exe if enabled
+                    mods = configmanager.get_config_value("mods_enabled")
+                    if "tosu" in mods and not tosu_injected:
+                        subprocess.Popen(
+                            [os.path.join(pathdir, "tosu.exe")],
+                            cwd=pathdir,
+                            startupinfo=startupinfo
+                        )
+                        tosu_injected = True
+                    # inject RelaxPatcher if enabled
+                    if "RelaxPatcher" in mods and not rp_injected:
+                        patcher_proc = subprocess.Popen(
+                            [os.path.join(pathdir, "relaxpatcher", "osu!.patcher.exe")],
+                            cwd=pathdir,
+                            startupinfo=startupinfo,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            text=True
+                        )
                         
-            except Exception as e:
-                pass
-            await asyncio.sleep(0.5)
-        await asyncio.sleep(0.01)
-        for proc in psutil.process_iter(['pid', 'name']):
-            try:
-                if proc.info['name'] and proc.info['name'].lower() in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe'):
-                    print(f"Killing process PID={proc.info['pid']} Name={proc.info['name']}")
-                    proc.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue
+                        try:
+                            # read its output once to verify it runs without exception
+                            out = patcher_proc.stdout.readline()
+                            if out and "System.Exception" not in out and out != "\n":
+                                print("RelaxPatcher output: ", out)
+                                rp_injected = True
+                        except Exception as e:
+                            print(f"Patch error: {e}")
+                        finally:
+                            patcher_proc.kill()
+
+                except Exception:
+                    pass
+
+                await asyncio.sleep(0.5)
+
+            await asyncio.sleep(0.01)
+
+            for p in psutil.process_iter(['pid','name']):
+                name = (p.info['name'] or '').lower()
+                if name in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe'):
+                    try:
+                        print(f"Killing process PID={p.pid} Name={p.info['name']}")
+                        p.kill()
+                    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                        pass
+
+            # if we saw the real osu! window, exit retry loop; otherwise, keep looping
+            if presentosu:
+                loadosu = False
+
     except Exception as err:
         util.win_message_box(
             f'We were unable to launch the game. Please contact support and provide the following information:\n\n{err}',
             'Unable to launch',
             util.MB_OK
         )
-
+        loadosu = False
 
     finally:
         lbtn.enable()
@@ -440,7 +467,7 @@ def main():
                     with ui.card().classes('w-96 shadow-lg'):
                         ui.label('M1PP Launcher Source Code').classes('text-xl font-semibold')
                         ui.label('The source code of this launcher').classes('text-sm text-gray-500')
-                        ui.button('GitHub', icon='code', on_click=lambda: webbrowser.open("https://github.com/M1PPosuDEV/m1pplauncher")) \
+                        ui.button('GitHub', icon='code', on_click=lambda: webbrowser.open("https://github.com/m1pp/launcher")) \
                             .classes('bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2')
                     
                     with ui.card().classes('w-96 shadow-lg'):
@@ -464,14 +491,6 @@ def main():
 
     
 if __name__ in {"__main__", "__mp_main__"}:
+    atexit.register(cleanup)
     ui.run(native=True, window_size=(970, 530), fullscreen=False, reload=False, title='M1PP Launcher', favicon=util.resource_path("icon.ico"), reconnect_timeout=99999, port=64821)
 
-    if task is not None and not task.done():
-        selected_server = configmanager.get_config_value("selected_server")
-        for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
-            try:
-                cmdline = proc.info['cmdline']
-                if cmdline and any(selected_server in arg for arg in cmdline):
-                    proc.kill()
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                continue

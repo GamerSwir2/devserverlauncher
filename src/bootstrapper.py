@@ -19,19 +19,16 @@ kdll = ctypes.windll.LoadLibrary("kernel32.dll")
 async def open_file_dialog(game_path):
     directory = os.path.join(os.getenv('LOCALAPPDATA'), 'osu!')
     if not os.path.isfile(os.path.join(directory, "osu!.exe")):
-        response = await asyncio.to_thread(
+        await asyncio.to_thread(
             util.win_message_box,
-            'Do you want to select your existing osu! folder?\n\nWe will use it to link the Songs and Skins folders.',
-            'Question',
-            util.MB_YESNO
+            'We couldn\'t locate your osu! folder.\n\nPlease select the folder where osu! is installed.\n\nWe will create symbolic links to the Songs and Skins folders in order to make your experience better.',
+            'Information',
+            util.MB_OK | util.MB_ICONINFORMATION
         )
-
-        if response == 7:
-            return 0
 
         directory = await asyncio.to_thread(
             crossfiledialog.choose_folder,
-            title="Select a folder"
+            title="Select the osu! installation folder",
         )
 
     osu_exe_path = os.path.join(directory, "osu!.exe")
@@ -39,16 +36,18 @@ async def open_file_dialog(game_path):
         try:
             response = await asyncio.to_thread(
                 util.win_message_box,
-                'Windows requires admin permissions to create symbolic links.\n\nPlease select "No", and we won\'t ask for admin permissions, however we will not be able to link your songs and skins folders.',
-                'Question',
-                util.MB_YESNO
+                'Windows requires admin permissions to create symbolic links.\n\nWe will ask for admin now, so we can create the links.',
+                'Information',
+                util.MB_OK | util.MB_ICONINFORMATION
             )
             if response == util.IDYES:
                 songs_link = str(os.path.join(game_path, "Songs"))
                 songs_target = str(os.path.join(directory, "Songs"))
                 skins_link = str(os.path.join(game_path, "Skins"))
                 skins_target = str(os.path.join(directory, "Skins"))
-                cmd_combined = f'mklink /D "{songs_link}" "{songs_target}" && mklink /D "{skins_link}" "{skins_target}"'
+                db_link = str(os.path.join(game_path, "osu!.db"))
+                db_target = str(os.path.join(directory, "osu!.db"))
+                cmd_combined = f'mklink /D "{songs_link}" "{songs_target}" && mklink /D "{skins_link}" "{skins_target}" && mklink "{db_link}" "{db_target}"'
                 print(cmd_combined)
                 ctypes.windll.shell32.ShellExecuteW(
                     None, "runas", "cmd.exe", f'/c "{cmd_combined}"', None, 0
@@ -58,7 +57,7 @@ async def open_file_dialog(game_path):
                 util.win_message_box,
                 f"Failed to create symbolic links: {e}",
                 "Error",
-                util.MB_ICONERROR
+                util.MB_OK | util.MB_ICONERROR
             )
             return 1
     else:
@@ -66,7 +65,7 @@ async def open_file_dialog(game_path):
             util.win_message_box,
             'osu! executable not found in the selected folder.\nPlease select a valid osu! installation folder.',
             'Error',
-            util.MB_ICONERROR
+            util.MB_OK | util.MB_ICONERROR
         )
         return 1
 

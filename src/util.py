@@ -5,6 +5,8 @@ import webbrowser
 import requests
 import os.path
 from pathlib import Path
+import pygetwindow as gw
+
 
 current_version = "0.1alpha"
 
@@ -19,6 +21,14 @@ IDOK = 1
 IDCANCEL = 2
 IDYES = 6
 IDNO = 7
+
+user32 = ctypes.windll.user32
+
+def is_osu_window_present():
+    for window in gw.getAllTitles():
+        if "osu!" in window.lower() and "(loading)" not in window.lower() and "updater" not in window.lower():
+            return True
+    return False
 
 def win_message_box(message, title, style):
     hwnd = ctypes.windll.user32.GetForegroundWindow()

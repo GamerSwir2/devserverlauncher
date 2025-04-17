@@ -69,8 +69,16 @@ skip_remove_old_data:
     CreateShortCut "$SMPROGRAMS\M1PP Launcher\M1PP Launcher.lnk" "$INSTDIR\m1pplauncher.exe"
     WriteRegStr HKLM "Software\M1PP Launcher" "InstallDir" "$INSTDIR"
     
-    ; Write the uninstaller executable so that the uninstallation section can be run later.
     WriteUninstaller "$INSTDIR\uninstall.exe"
+
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "DisplayName" "M1PP Launcher"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "UninstallString" "$INSTDIR\uninstall.exe"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "InstallLocation" "$INSTDIR"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "DisplayIcon" "$INSTDIR\m1pplauncher.exe"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "Publisher" "YourPublisherName"
+    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "DisplayVersion" "1.0.0"
+    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "NoModify" 1
+    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher" "NoRepair" 1
 SectionEnd
 
 ;--------------------------------
@@ -82,6 +90,7 @@ Section "Uninstall"
     Delete "$DESKTOP\M1PP Launcher.lnk"
     Delete "$SMPROGRAMS\M1PP Launcher\M1PP Launcher.lnk"
     DeleteRegKey HKLM "Software\M1PP Launcher"
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\M1PP Launcher"
     RMDir "$INSTDIR"
     RMDir "$SMPROGRAMS\M1PP Launcher"
 SectionEnd

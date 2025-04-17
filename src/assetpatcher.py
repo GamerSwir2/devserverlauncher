@@ -29,7 +29,11 @@ import util
 import io
 
 
-clr.AddReference(util.resource_path("Mono.Cecil.dll"))
+#cecil_folder = os.path.abspath("./cecil")
+#if cecil_folder not in sys.path:
+#    sys.path.append(cecil_folder)
+
+clr.AddReference(util.resource_path("Mono.Cecil"))
 import Mono.Cecil as Cecil
 
 clr.AddReference("System.Drawing")
@@ -38,17 +42,14 @@ from System.IO import File, MemoryStream
 from System.Resources import ResourceReader, ResourceWriter
 
 def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resources_blob_name="osu_ui.ResourcesStore.resources"):
-    # Load and modify the assembly in memory
     reader_params = Cecil.ReaderParameters(Cecil.ReadingMode.Immediate)
     assembly = Cecil.AssemblyDefinition.ReadAssembly(target_dll, reader_params)
     module = assembly.MainModule
 
-    # Locate the target embedded resource
     target_resource = next((res for res in module.Resources if res.Name == resources_blob_name), None)
     if target_resource is None:
         raise Exception(f"Could not locate resource: {resources_blob_name}")
 
-    # Read existing resource entries
     original_resource_data = target_resource.GetResourceData()
     resource_entries = {}
 
@@ -62,7 +63,6 @@ def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resourc
         ms_in.Close()
         ms_in.Dispose()
 
-    # Replace assets
     for asset_file in asset_array:
         asset_path = os.path.join(asset_src_folder, asset_file + ".png")
         if not os.path.exists(asset_path):
@@ -84,7 +84,6 @@ def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resourc
             ms_img.Close()
             ms_img.Dispose()
 
-    # Rebuild the resource blob
     ms_out = MemoryStream()
     writer = ResourceWriter(ms_out)
     try:
@@ -98,7 +97,6 @@ def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resourc
         ms_out.Close()
         ms_out.Dispose()
 
-    # Inject the new resource
     new_resource = Cecil.EmbeddedResource(
         target_resource.Name,
         target_resource.Attributes,
@@ -107,7 +105,6 @@ def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resourc
     module.Resources.Remove(target_resource)
     module.Resources.Add(new_resource)
 
-    # Write the updated assembly
     assembly.Write(output_path)
     assembly.Dispose()
     print(f"Patched DLL written to {output_path}")
