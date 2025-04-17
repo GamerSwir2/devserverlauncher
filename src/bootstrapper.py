@@ -40,18 +40,17 @@ async def open_file_dialog(game_path):
                 'Information',
                 util.MB_OK | util.MB_ICONINFORMATION
             )
-            if response == util.IDYES:
-                songs_link = str(os.path.join(game_path, "Songs"))
-                songs_target = str(os.path.join(directory, "Songs"))
-                skins_link = str(os.path.join(game_path, "Skins"))
-                skins_target = str(os.path.join(directory, "Skins"))
-                db_link = str(os.path.join(game_path, "osu!.db"))
-                db_target = str(os.path.join(directory, "osu!.db"))
-                cmd_combined = f'mklink /D "{songs_link}" "{songs_target}" && mklink /D "{skins_link}" "{skins_target}" && mklink "{db_link}" "{db_target}"'
-                print(cmd_combined)
-                ctypes.windll.shell32.ShellExecuteW(
-                    None, "runas", "cmd.exe", f'/c "{cmd_combined}"', None, 0
-                )
+            songs_link = str(os.path.join(game_path, "Songs"))
+            songs_target = str(os.path.join(directory, "Songs"))
+            skins_link = str(os.path.join(game_path, "Skins"))
+            skins_target = str(os.path.join(directory, "Skins"))
+            db_link = str(os.path.join(game_path, "osu!.db"))
+            db_target = str(os.path.join(directory, "osu!.db"))
+            cmd_combined = f'mklink /D "{songs_link}" "{songs_target}" && mklink /D "{skins_link}" "{skins_target}" && mklink "{db_link}" "{db_target}"'
+            print(cmd_combined)
+            ctypes.windll.shell32.ShellExecuteW(
+                None, "runas", "cmd.exe", f'/c "{cmd_combined}"', None, 0
+            )
         except Exception as e:
             await asyncio.to_thread(
                 util.win_message_box,
@@ -121,7 +120,7 @@ async def async_bootstrap_osu(destination_folder):
             await download_osu_files(destination_folder)
             chk = await open_file_dialog(destination_folder)
             if chk == 1:
-                return 1
+                raise InstallError("Could not create symlinks")
         except InstallError as e:
             raise InstallError("Failed to download osu! files") from e
 
