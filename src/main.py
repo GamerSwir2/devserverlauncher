@@ -21,7 +21,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='[%(asctime)s] [%(levelname)s] -> %(message)s',
     handlers=[
-        logging.FileHandler(os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher.log'), mode='w'),
+        logging.handlers.TimedRotatingFileHandler(os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher.log')),
         logging.StreamHandler()
     ]
 )
@@ -259,7 +259,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                             cwd=pathdir,
                             startupinfo=startupinfo,
                             stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, 
                             text=True
                         )
                         try:
