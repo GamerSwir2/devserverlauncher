@@ -64,9 +64,9 @@ Section "Install M1PP Launcher" SEC01
     SetRegView 64
     StrCmp $RemoveOldData "1" remove_old_data skip_remove_old_data
 remove_old_data:
-    nsExec::Exec '"cmd.exe /c del "$LOCALAPPDATA\osu!m1pp\osu!.db"'
-    nsExec::Exec '"cmd.exe /c rmdir "$LOCALAPPDATA\osu!m1pp\Songs"'
-    nsExec::Exec '"cmd.exe /c rmdir "$LOCALAPPDATA\osu!m1pp\Skins"'
+    System::Call 'kernel32::DeleteFileW(w "$LOCALAPPDATA\osu!m1pp\osu!.db") i .r0'
+    System::Call 'kernel32::RemoveDirectoryW(w "$LOCALAPPDATA\osu!m1pp\Songs") i .r0'
+    System::Call 'kernel32::RemoveDirectoryW(w "$LOCALAPPDATA\osu!m1pp\Skins") i .r0'
     RMDir /r "$LOCALAPPDATA\osu!m1pp"
     Delete "$LOCALAPPDATA\m1pposu_config.json"
 skip_remove_old_data:
