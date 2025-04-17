@@ -8,7 +8,7 @@ from pathlib import Path
 import pygetwindow as gw
 
 
-current_version = "0.1alpha"
+current_version = "0.2alpha"
 
 MB_OK = 0x0
 MB_OKCANCEL = 0x1
