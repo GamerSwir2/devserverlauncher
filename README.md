@@ -63,7 +63,7 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 3. `pacman -S mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-python-cairo mingw-w64-ucrt-x86_64-python-gobject mingw-w64-ucrt-x86_64-python-pywin32 mingw-w64-ucrt-x86_64-rust mingw-w64-ucrt-x86_64-rustup mingw-w64-ucrt-x86_64-python-psutil base-devel git mingw-w64-ucrt-x86_64-toolchain`
 4. `rustup install stable-x86_64-pc-windows-gnu`
 5. `rustup default stable-x86_64-pc-windows-gnu`
-6. `pip install -r requirements-msys.txt`
+6. `pip install -r requirements-msys2.txt`
 
 **Now back to PowerShell**
 1. `build.bat`
