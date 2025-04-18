@@ -35,7 +35,7 @@ RequestExecutionLevel admin
 !define MUI_HEADERIMAGE_BITMAP "banner.bmp"
 !define MUI_ICON "icon.ico"
 !insertmacro MUI_PAGE_DIRECTORY
-; !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 Page Custom RemoveOldDataPageCreate RemoveOldDataPageLeave
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_UNPAGE_CONFIRM
