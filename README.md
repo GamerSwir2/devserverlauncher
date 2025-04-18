@@ -42,6 +42,10 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 
 ### Prerequisites
 
+1. [Git for Windows](https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/Git-2.49.0-64-bit.exe)
+2. [Python 3.11.x](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
+3. 
+
 ### Building
 
 1. 
