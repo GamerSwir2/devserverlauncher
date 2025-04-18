@@ -57,7 +57,7 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 4. `.\venv\Scripts\Activate.ps1`
 5. `pip install -r requirements.txt`
 
-**From now on, make sure you are using the MSYS2 UCRT64, but don't close the PowerShell window**
+**From now on, make sure you are using the MSYS2 UCRT64 shell, but don't close the PowerShell window yet**
 1. Find the m1pplauncher folder and cd into it, often located in `/c/Users/YOUR_USER_NAME/m1pplauncher`
 2. `source venv\Scripts\activate`
 3. `pacman -S mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-python-cairo mingw-w64-ucrt-x86_64-python-gobject mingw-w64-ucrt-x86_64-python-pywin32 mingw-w64-ucrt-x86_64-rust mingw-w64-ucrt-x86_64-rustup mingw-w64-ucrt-x86_64-python-psutil base-devel git mingw-w64-ucrt-x86_64-toolchain`
