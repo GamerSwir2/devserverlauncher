@@ -521,7 +521,7 @@ def main():
                     with ui.card().classes('w-96 shadow-lg'):
                         ui.label('M1PP Launcher Source Code').classes('text-xl font-semibold')
                         ui.label('The source code of this launcher').classes('text-sm text-gray-500')
-                        ui.button('GitHub', icon='code', on_click=lambda: webbrowser.open("https://github.com/m1pp/launcher")) \
+                        ui.button('GitHub', icon='code', on_click=lambda: webbrowser.open("https://github.com/M1PPosuDEV/m1pplauncher")) \
                             .classes('bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2')
                     
                     with ui.card().classes('w-96 shadow-lg'):
