@@ -44,11 +44,30 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 
 1. [Git for Windows](https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/Git-2.49.0-64-bit.exe)
 2. [Python 3.11.x](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
-3. 
+3. [MSYS2 (Follow the PyGObject install instructions)](https://pygobject.gnome.org/getting_started.html#windows-getting-started)
+4. [NSIS 3 (For building the installer)](https://nsis.sourceforge.io/Download)
+5. [.NET SDK 8.0.408](https://builds.dotnet.microsoft.com/dotnet/Sdk/8.0.408/dotnet-sdk-8.0.408-win-x64.exe)
 
 ### Building
 
-1. 
+**In windows PowerShell**
+1. `git clone https://github.com/M1PPosuDEV/m1pplauncher.git`
+2. `cd m1pplauncher`
+3. `python -m venv venv`
+4. `.\venv\Scripts\Activate.ps1`
+5. `pip install -r requirements.txt`
+
+**From now on, make sure you are using the MSYS2 UCRT64, but don't close the PowerShell window**
+1. Find the m1pplauncher folder and cd into it, often located in `/c/Users/YOUR_USER_NAME/m1pplauncher`
+2. `source venv\Scripts\activate`
+3. `pacman -S mingw-w64-ucrt-x86_64-python-pip mingw-w64-ucrt-x86_64-python-cairo mingw-w64-ucrt-x86_64-python-gobject mingw-w64-ucrt-x86_64-python-pywin32 mingw-w64-ucrt-x86_64-rust mingw-w64-ucrt-x86_64-rustup mingw-w64-ucrt-x86_64-python-psutil base-devel git mingw-w64-ucrt-x86_64-toolchain`
+4. `rustup install stable-x86_64-pc-windows-gnu`
+5. `rustup default stable-x86_64-pc-windows-gnu`
+6. `pip install -r requirements-msys.txt`
+
+**Now back to PowerShell**
+1. `build.bat`
+2. `makensis install.nsi` (Installer, optional)
 
 ## Roadmap
 
