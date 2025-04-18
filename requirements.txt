@@ -1,9 +1,7 @@
+--only-binary=nicegui,pythonnet,pywebview,crossfiledialog,easygui,pywin32,psutil
 nicegui
 pythonnet
 pywebview
-meson
-pycairo
-pygobject
 crossfiledialog
 easygui
 pywin32
