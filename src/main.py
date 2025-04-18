@@ -182,7 +182,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
         loadosu = True
         logging.debug("Entering launch loop")
         while loadosu:
-            progress_label.set_text('Bootstraping osu!...')
+            progress_label.set_text('Bootstrapping osu!...')
             logging.info("Bootstrapping osu at %s", pathdir)
             pathdir = configmanager.get_config_value("osu_path")
             res = await bootstrapper.async_bootstrap_osu(pathdir)
