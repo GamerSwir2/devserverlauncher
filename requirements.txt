@@ -6,4 +6,5 @@ crossfiledialog
 easygui
 pywin32
 psutil
+pyinstaller
 pygetwindow
