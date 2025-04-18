@@ -12,7 +12,7 @@
 ; General Installer Settings
 ;--------------------------------
 Name "M1PP Launcher"
-OutFile "m1pplauncher-setup-alpha2.exe"
+OutFile "m1pplauncher-setup-alpha2-hotfix.exe"
 InstallDir "$PROGRAMFILES\M1PPLauncher"
 InstallDirRegKey HKLM "Software\M1PP Launcher" "InstallDir"
 Icon "icon.ico"
@@ -75,6 +75,7 @@ Section "Install M1PP Launcher" SEC01
     ExecWait 'taskkill /F /IM m1pplauncher.exe' $0
     ExecWait 'taskkill /F /IM tosu.exe' $0
     ExecWait 'taskkill /F /IM "osu!.patcher.exe"' $0
+    ExecWait 'taskkill /F /IM "tosu-overlay.exe"' $0
 
     SetOutPath "$INSTDIR"
     SetRegView 64
@@ -139,6 +140,8 @@ Section "Uninstall"
     ExecWait 'taskkill /F /IM m1pplauncher.exe' $0
     ExecWait 'taskkill /F /IM tosu.exe' $0
     ExecWait 'taskkill /F /IM "osu!.patcher.exe"' $0
+    ExecWait 'taskkill /F /IM "tosu-overlay.exe"' $0
+    
     System::Call 'kernel32::DeleteFileW(w "$LOCALAPPDATA\\osu!m1pp\\osu!.db") i .r0'
     System::Call 'kernel32::RemoveDirectoryW(w "$LOCALAPPDATA\\osu!m1pp\\Songs") i .r0'
     System::Call 'kernel32::RemoveDirectoryW(w "$LOCALAPPDATA\\osu!m1pp\\Skins") i .r0'

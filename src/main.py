@@ -87,7 +87,7 @@ app.on_startup(validate_config)
 def cleanup():
     for p in psutil.process_iter(['pid','name']):
         name = (p.info['name'] or '').lower()
-        if name in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe'):
+        if name in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe', 'tosu-overlay.exe'):
             try:
                 print(f"Killing process PID={p.pid} Name={p.info['name']}")
                 p.kill()
@@ -208,8 +208,6 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
             tosu_injected = False
             rp_injected = False
             presentosu = False
-            osucheckexecuted = False
-            tried = 0
 
             while proc.poll() is None:
                 try:
@@ -271,11 +269,22 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                                 rp_injected = True
                             if "System.Exception" in out:
                                 patcher_proc.kill()
+                            if "install .NET" in out:
+                                logging.error("RelaxPatcher error: %s", out)
+                                util.win_message_box(
+                                    'RelaxPatcher mod requires .NET 8.0.15, would you like to install it?\n\n(If you have it already installed, try restarting your PC)',
+                                    'Mod error',
+                                    util.MB_YESNO | util.MB_ICONERROR
+                                )
+                                if response == util.IDYES:
+                                    webbrowser.open("https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.15/windowsdesktop-runtime-8.0.15-win-x64.exe")
+                                loadosu = False
+                                break
                         except Exception as e:
                             logging.error("Patch error: %s", e)
 
                                         
-                    MAIN_WINDOW_TIMEOUT = 10
+                    MAIN_WINDOW_TIMEOUT = 13
                     start_time = time.time()
 
                     while proc.poll() is None:
@@ -286,6 +295,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
 
                         if util.is_osu_updater_present():
                             logging.warning("osu! auto‑updater still running; waiting for it to finish")
+                            presentosu = True
                         elif util.is_osu_loading_window_present():
                             logging.info("osu! loading stub detected; still booting")
                         elif util.is_osu_main_window_present():
@@ -307,7 +317,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
             logging.debug("Launch loop exited, cleaning up processes")
             for p in psutil.process_iter(['pid','name']):
                 name = (p.info['name'] or '').lower()
-                if name in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe'):
+                if name in ('osu!.exe', 'tosu.exe', 'osu!.patcher.exe', 'tosu-overlay.exe'):
                     try:
                         logging.debug("Killing process PID=%d Name=%s", p.pid, p.info['name'])
                         p.kill()
