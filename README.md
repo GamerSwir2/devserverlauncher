@@ -97,3 +97,4 @@ Join our [Discord](https://dsc.gg/m1ppand4ayo)
 ## Credits
 
 [README Template](https://github.com/othneildrew/Best-README-Template)
+[Mono.Cecil](https://github.com/jbevain/cecil)
