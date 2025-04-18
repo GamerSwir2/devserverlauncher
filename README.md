@@ -71,7 +71,11 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 
 ## Roadmap
 
-- [ ] Not filled in yet
+- [ ] Adjustments to tosu pp calculation
+- [ ] Discord Rich Presence support
+- [ ] In-Launcher logging in
+- [ ] osu!rx patcher rework
+- [ ] Multi-Platform support
 
 See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
 
