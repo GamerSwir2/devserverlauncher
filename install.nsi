@@ -12,7 +12,7 @@
 ; General Installer Settings
 ;--------------------------------
 Name "M1PP Launcher"
-OutFile "m1pplauncher-setup-alpha2-hotfix.exe"
+OutFile "m1pplauncher-setup-alpha2-oss-blf.exe"
 InstallDir "$PROGRAMFILES\M1PPLauncher"
 InstallDirRegKey HKLM "Software\M1PP Launcher" "InstallDir"
 Icon "icon.ico"
