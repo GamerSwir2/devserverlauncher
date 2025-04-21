@@ -66,7 +66,6 @@ def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resourc
     for asset_file in asset_array:
         asset_path = os.path.join(asset_src_folder, asset_file + ".png")
         if not os.path.exists(asset_path):
-            print(f"Error: Missing file {asset_path}")
             continue
 
         with open(asset_path, "rb") as f:
@@ -77,9 +76,6 @@ def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resourc
             bitmap = Bitmap(ms_img)
             if asset_file in resource_entries:
                 resource_entries[asset_file] = bitmap
-                print(f"Replaced resource entry for: {asset_file}")
-            else:
-                print(f"Resource key '{asset_file}' not found in {resources_blob_name}.")
         finally:
             ms_img.Close()
             ms_img.Dispose()
@@ -107,7 +103,6 @@ def patch_assets(target_dll, asset_array, asset_src_folder, output_path, resourc
 
     assembly.Write(output_path)
     assembly.Dispose()
-    print(f"Patched DLL written to {output_path}")
     return
 
 if __name__ == "__main__":

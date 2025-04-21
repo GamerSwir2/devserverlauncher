@@ -1,3 +1,4 @@
+import platform
 import os
 from pathlib import Path
 import asyncio
@@ -12,12 +13,18 @@ import tempfile
 import ctypes
 import util
 import crossfiledialog
+import shutil
 
-
-kdll = ctypes.windll.LoadLibrary("kernel32.dll")
+if platform.system() == "Windows":
+    kdll = ctypes.windll.LoadLibrary("kernel32.dll")
+elif platform.system() == "Linux":
+    import prefixmanager
 
 async def open_file_dialog(game_path):
-    directory = os.path.join(os.getenv('LOCALAPPDATA'), 'osu!')
+    if platform.system() == "Windows":
+        directory = os.path.join(os.getenv('LOCALAPPDATA'), 'osu!')
+    elif platform.system() == "Linux":
+        directory = os.path.expanduser("~/.local/share/osu-wine/osu!")
     if not os.path.isfile(os.path.join(directory, "osu!.exe")):
         await asyncio.to_thread(
             util.win_message_box,
@@ -34,23 +41,27 @@ async def open_file_dialog(game_path):
     osu_exe_path = os.path.join(directory, "osu!.exe")
     if directory and os.path.isfile(osu_exe_path):
         try:
-            response = await asyncio.to_thread(
-                util.win_message_box,
-                'Windows requires admin permissions to create symbolic links.\n\nWe will ask for admin now, so we can create the links.',
-                'Information',
-                util.MB_OK | util.MB_ICONINFORMATION
-            )
             songs_link = str(os.path.join(game_path, "Songs"))
             songs_target = str(os.path.join(directory, "Songs"))
             skins_link = str(os.path.join(game_path, "Skins"))
             skins_target = str(os.path.join(directory, "Skins"))
             db_link = str(os.path.join(game_path, "osu!.db"))
             db_target = str(os.path.join(directory, "osu!.db"))
-            cmd_combined = f'mklink /D "{songs_link}" "{songs_target}" && mklink /D "{skins_link}" "{skins_target}" && mklink "{db_link}" "{db_target}"'
-            print(cmd_combined)
-            ctypes.windll.shell32.ShellExecuteW(
-                None, "runas", "cmd.exe", f'/c "{cmd_combined}"', None, 0
-            )
+            if platform.system() == "Windows":
+                response = await asyncio.to_thread(
+                    util.win_message_box,
+                    'Windows requires admin permissions to create symbolic links.\n\nWe will ask for admin now, so we can create the links.',
+                    'Information',
+                    util.MB_OK | util.MB_ICONINFORMATION
+                )
+                cmd_combined = f'mklink /D "{songs_link}" "{songs_target}" && mklink /D "{skins_link}" "{skins_target}" && mklink "{db_link}" "{db_target}"'
+                ctypes.windll.shell32.ShellExecuteW(
+                    None, "runas", "cmd.exe", f'/c "{cmd_combined}"', None, 0
+                )
+            elif platform.system() == "Linux":
+                os.symlink(songs_target, songs_link)
+                os.symlink(skins_target, skins_link)
+                os.symlink(db_target, db_link)
         except Exception as e:
             await asyncio.to_thread(
                 util.win_message_box,
@@ -70,8 +81,12 @@ async def open_file_dialog(game_path):
 
     return 0
 
-config_path = os.path.join(os.getenv('LOCALAPPDATA'), 'm1pplauncher-config.json')
-default_game_path = os.path.join(Path.home(), r'AppData\Local\osu!m1pp')
+if platform.system() == "Windows":
+    config_path = configmanager.CONFIG_FILE
+    default_game_path = os.path.join(Path.home(), r'AppData\Local\osu!m1pp')
+if platform.system() == "Linux":
+    config_path = configmanager.CONFIG_FILE
+    default_game_path = os.path.join(os.getenv("HOME"), ".local", "share", "osu-m1pp", "osu!m1pp")
 
 update_data_endpoint = "https://osu.ppy.sh/web/check-updates.php?action=check&stream=Stable40"
 
@@ -114,6 +129,8 @@ async def download_osu_files(destination_folder):
                                 raise InstallError(f"Failed to write chunk for {file['filename']}") from e
 
 async def async_bootstrap_osu(destination_folder):
+    if platform.system() == "Linux":
+        await prefixmanager.setup_prefix(os.path.join(os.getenv("HOME"), ".local", "share", "osu-m1pp"))
     os.makedirs(destination_folder, exist_ok=True)
     if not os.path.isfile(os.path.join(destination_folder, "osu!.exe")):
         try:
@@ -186,14 +203,29 @@ async def async_bootstrap_osu(destination_folder):
 
         if "RelaxPatcher" in enabled_mods:
             if not os.path.exists(os.path.join(destination_folder, "relaxpatcher", "osu!.patcher.exe")):
-                await download_and_extract(
-                    "https://github.com/4ayo-ovh/osu-patcher/releases/latest/download/relaxpatcher.zip",
-                    "relaxpatcher.zip",
-                    destination_folder,
-                    tmpdir
-                )
-
-        
-        
+                if platform.system() == "Windows":
+                    await download_and_extract(
+                        "https://github.com/4ayo-ovh/osu-patcher/releases/latest/download/relaxpatcher.zip",
+                        "relaxpatcher.zip",
+                        destination_folder,
+                        tmpdir
+                    )
+                elif platform.system() == "Linux":
+                    await download_and_extract(
+                        "https://github.com/4ayo-ovh/osu-patcher-linux/releases/latest/download/relaxpatcher.zip",
+                        "relaxpatcher.zip",
+                        destination_folder,
+                        tmpdir
+                    )
+        if platform.system() == "Linux":
+            try:
+                os.symlink(os.path.join(prefixmanager.default_location, "osu!m1pp"), os.path.join(prefixmanager.default_location, "osu-prefix", "dosdevices", "g:"))
+            except:
+                pass
+            shutil.copyfile(
+                util.resource_path("titledaemon.exe"),
+                os.path.join(destination_folder, "titledaemon.exe")
+            )
 if __name__ == "__main__":
+    configmanager.ensure_config_file()
     asyncio.run(async_bootstrap_osu(default_game_path))

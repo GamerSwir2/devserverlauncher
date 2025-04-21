@@ -1,9 +1,14 @@
+import platform
 import os
 import json
 import util
 from pathlib import Path
 
-CONFIG_FILE = os.path.join(os.getenv('LOCALAPPDATA'), 'm1pposu_config.json')
+if platform.system() == "Windows":
+    CONFIG_FILE = os.path.join(os.getenv('LOCALAPPDATA'), 'm1pposu_config.json')
+if platform.system() == "Linux":
+    os.makedirs(os.path.expanduser("~/.local/share/") + "osu-m1pp", exist_ok=True)
+    CONFIG_FILE = os.path.expanduser("~/.local/share/osu-m1pp/") + "m1pposu_config.json"
 
 def ensure_config_file():
     if not os.path.exists(CONFIG_FILE):

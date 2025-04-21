@@ -8,3 +8,4 @@ pywin32
 psutil
 pyinstaller
 pygetwindow
+discord-rpc

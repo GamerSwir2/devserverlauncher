@@ -1,0 +1,11 @@
+messagebox
+nicegui
+pythonnet
+pywebview
+crossfiledialog
+easygui
+psutil
+pyinstaller
+pycairo
+pygobject
+discord-rpc

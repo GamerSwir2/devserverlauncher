@@ -50,6 +50,7 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 
 ### Building
 
+### Windows
 **In Windows PowerShell**
 1. `git clone https://github.com/M1PPosuDEV/m1pplauncher.git`
 2. `cd m1pplauncher`
@@ -67,6 +68,9 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 7. `sh build.sh`
 8. `C:/Program\ Files\ \(x86\)/NSIS/Bin/makensis.exe install.nsi` (Installer, optional)
 
+### Linux
+TODO (You should be able to build it by downloading `mono-complete`, installing `requirements-linux.txt` with pip, and building with `build-linux.sh`)
+
 ## Roadmap
 
 - [ ] Adjustments to tosu pp calculation
@@ -74,7 +78,7 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 - [ ] In-Launcher logging in
 - [ ] osu!rx patcher rework
 - [ ] osu!trainer mod
-- [ ] Multi-Platform support
+- [x] Multi-Platform support
 
 See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
 
