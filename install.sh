@@ -7,6 +7,8 @@ ICON_PATH="$HOME/.local/share/m1pplauncher-files/m1pplauncher.png"
 
 TAR_URL="https://github.com/M1PPosuDEV/m1pplauncher/releases/download/0.3alpha/m1pplauncher-linux.tar.gz"
 
+m1pplauncher-uninstall
+
 install_deps() {
     echo "Installing mono-complete..."
 
