@@ -367,7 +367,10 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                             tasklist_proc = prefixmanager.open_wine_process("C:\\\\windows\\\\system32\\\\tasklist.exe", isoutput=True)
                             tasklist_output = tasklist_proc.stdout.read()
                             tasklist_proc.kill()
-                            dec = tasklist_output.decode("utf-8")
+                            try:
+                                dec = tasklist_output.decode("utf-8")
+                            except:
+                                dec = tasklist_output.decode("windows-1252")
                             for line in dec.splitlines():
                                 if line.strip().startswith("osu!.exe"):
                                     match = re.search(r'osu!\.exe\s+(\d+)', line)
