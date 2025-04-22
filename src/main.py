@@ -61,8 +61,6 @@ elif platform.system() == "Linux":
     )
     app.native.start_args['gui'] = "cef"
 
-
-
 app.middleware_stack = None
 app.native.window_args['resizable'] = False
 
@@ -157,11 +155,10 @@ def on_tab_change(event):
             </style>
         ''')
 
-def launch_handler(tabs, ssel, lbtn, progress_label):
+def launch_handler(tabs, server_input, lbtn, progress_label):
     global task
-    task = asyncio.create_task(launch_osu(tabs, ssel, lbtn, progress_label))
+    task = asyncio.create_task(launch_osu(tabs, server_input, lbtn, progress_label))
 
-# Unfortunately there isn't a way to just hide the window, you have to use the Windows API :c
 def set_window_visibility(title: str, visible: bool) -> bool:
     if platform.system() == "Windows":
         SW_HIDE = 0
@@ -187,12 +184,12 @@ def toggle_mod(name, value):
     debug_mods.update()
 
 
-async def launch_osu(tabs, ssel, lbtn, progress_label):
+async def launch_osu(tabs, server_input, lbtn, progress_label):
     logging.info("Starting osu!")
     try:
         logging.debug("Disabling launch button and freezing tabs")
         lbtn.disable()
-        set_tab_change_state(tabs, ssel, False)
+        set_tab_change_state(tabs, server_input, False)
 
         configmanager.set_config_value("osu_path", bootstrapper.default_game_path)
         osu_path = bootstrapper.default_game_path
@@ -214,7 +211,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                 return
 
             progress_label.set_text('Launching osu!...')
-            server = configmanager.get_config_value("selected_server")
+            server = server_input.value
             logging.info("Launching osu!.exe with devserver %s", server)
             if platform.system() == "Windows":
                 proc = subprocess.Popen(
@@ -308,7 +305,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                     if process:
                         if platform.system() == "Windows":
                             cmd = process.cmdline()
-                            if configmanager.get_config_value("selected_server") not in cmd:
+                            if server_input.value not in cmd:
                                 if not any(ext in cmd for ext in [".osk", ".osr", ".osu", ".osz", ".osb"]):
                                     logging.warning("Detected osu! update: server arg missing in command line %s", cmd)
                                     asyncio.to_thread(util.win_message_box,
@@ -335,7 +332,6 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
                                 )
                                 loadosu = False
                                 break
-
 
                     mods = configmanager.get_config_value("mods_enabled")
                     if "tosu" in mods and not tosu_injected:
@@ -465,7 +461,7 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
             )
         except:
             pass
-        set_tab_change_state(tabs, ssel, True)
+        set_tab_change_state(tabs, server_input, True)
         if platform.system() == "Linux":
             prefixmanager.kill_wineserver()
             logging.debug("Killing wineserver")
@@ -473,18 +469,13 @@ async def launch_osu(tabs, ssel, lbtn, progress_label):
             logging.debug("Restoring M1PP Launcher window visibility")
             set_window_visibility("M1PP Launcher", True)
 
-def set_tab_change_state(tabs, ssel, state):
+def set_tab_change_state(tabs, server_input, state):
     if state:
         tabs.style("pointer-events: auto;")
-        ssel.style("pointer-events: auto;")
+        server_input.style("pointer-events: auto;")
     else:
         tabs.style("pointer-events: none;")
-        ssel.style("pointer-events: none;")
-
-def on_toggle_change(e):
-    global debug_server
-    configmanager.set_config_value("selected_server", e.args[1]["label"])
-    debug_server.set_text('Server: {}'.format(configmanager.get_config_value("selected_server")))
+        server_input.style("pointer-events: none;")
 
 @ui.page('/')
 def main():
@@ -591,14 +582,19 @@ def main():
             global debug_mods
             global debug_server
             with ui.column().classes("h-96 w-full align-middle flex justify-center items-center overflow-hidden fade-animation"):
-                server = configmanager.get_config_value("selected_server")
-                if server == "4ayosu.ovh":
-                    serverid = 2
-                else:
-                    serverid = 1
-                toggle = ui.toggle({1: 'm1pposu.dev', 2: '4ayosu.ovh'}, value=serverid)
-                toggle.on('update:modelValue', on_toggle_change)
-                lbtn = ui.button('Launch', on_click=lambda: launch_handler(tabs, toggle, lbtn, progress_label)).classes('px-12 mt-7')
+                server_input = ui.input(
+                    label='Server Address', 
+                    value=configmanager.get_config_value("selected_server"),
+                    validation={'Please enter a valid server address': lambda value: len(value) > 0}
+                ).classes('w-64')
+                
+                def on_server_change():
+                    configmanager.set_config_value("selected_server", server_input.value)
+                    debug_server.set_text('Server: {}'.format(server_input.value))
+                
+                server_input.on('blur', on_server_change)
+                
+                lbtn = ui.button('Launch', on_click=lambda: launch_handler(tabs, server_input, lbtn, progress_label)).classes('px-12 mt-7')
                 progress_label = ui.label('')
 
                 global launch_info_card
@@ -630,8 +626,6 @@ def main():
             ui.switch('Show launch info', value=configmanager.get_config_value("launch_info"), on_change=lambda e: (configmanager.set_config_value("launch_info", e.sender.value)))
             # ui.switch('Play animations', value=configmanager.get_config_value("animations"), on_change=lambda e: configmanager.set_config_value("animations", e.sender.value))
             ui.switch('Dark mode', value=value4, on_change=lambda e: (ui.run_javascript('location.reload();'), configmanager.set_config_value("dark_mode", e.value), ui.run_javascript('location.reload();')))
-
-
 
         with ui.tab_panel('d').classes("overflow-hidden"):
             mods_enabled = configmanager.get_config_value("mods_enabled")
@@ -672,7 +666,5 @@ def main():
                             .classes('text-white rounded-full px-4 py-2')
 
 
-
 if __name__ in {"__main__", "__mp_main__"}:
     ui.run(native=True, window_size=(970, 530), fullscreen=False, reload=False, title='M1PP Launcher', favicon=util.resource_path("icon.ico"), reconnect_timeout=99999, port=64821)
-
