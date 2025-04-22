@@ -55,7 +55,6 @@ def validate_config():
             prefixmanager.kill_wineserver()
         except:
             pass
-    util.check_for_updates()
     if not configmanager.ensure_config_file():
         response = util.win_message_box(
             'Your configuration file is either corrupted or inaccessible to the launcher. Do you want to correct this error?',
@@ -593,6 +592,12 @@ def main():
             with ui.scroll_area().classes('space-y-0 py-0 w-full h-96 overflow-hidden'):
                 with ui.column().classes('h-full w-full items-center justify-center'):
 
+                    with ui.card().classes('w-96 shadow-lg'):
+                        ui.label('Devserver Fork Source Code').classes('text-xl font-semibold')
+                        ui.label('The source code of this fork').classes('text-sm text-gray-500')
+                        ui.button('GitHub', icon='code', on_click=lambda: webbrowser.open("https://github.com/GamerSwir2/devserverlauncher")) \
+                            .classes('bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2')
+                    
                     with ui.card().classes('w-96 shadow-lg'):
                         ui.label('M1PP Launcher Source Code').classes('text-xl font-semibold')
                         ui.label('The source code of this launcher').classes('text-sm text-gray-500')
