@@ -203,8 +203,8 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
                 proc = prefixmanager.open_wine_process(f"G:\\osu!.exe -devserver {server}")
             logging.debug("Started osu process with PID=%s", getattr(proc, 'pid', None))
             if configmanager.get_config_value("launcher_hide_startup"):
-                logging.debug("Hiding M1PP Launcher window on startup")
-                set_window_visibility("M1PP Launcher", False)
+                logging.debug("Hiding OSU Private server launcher window on startup")
+                set_window_visibility("OSU Private server launcher", False)
 
             tosu_injected = False
             rp_injected = False
@@ -429,8 +429,8 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
             prefixmanager.kill_wineserver()
             logging.debug("Killing wineserver")
         if configmanager.get_config_value("launcher_hide_startup"):
-            logging.debug("Restoring M1PP Launcher window visibility")
-            set_window_visibility("M1PP Launcher", True)
+            logging.debug("Restoring OSU Private server launcher window visibility")
+            set_window_visibility("OSU Private server launcher", True)
 
 def set_tab_change_state(tabs, server_input, state):
     if state:
@@ -532,7 +532,7 @@ def main():
     if configmanager.get_config_value("dark_mode"):
         ui.dark_mode().enable()
     ui.colors(primary='#e4ade4', brand='#ffc4ff')
-    ui.page_title('M1PP Launcher')
+    ui.page_title('OSU Private server launcher')
     with ui.tabs().classes('w-full fade-animation') as tabs:
         ui.tab('a', label='Home').classes('px-12')
         ui.tab('c', label='Settings').classes('px-12')
@@ -593,7 +593,7 @@ def main():
                 with ui.column().classes('h-full w-full items-center justify-center'):
 
                     with ui.card().classes('w-96 shadow-lg'):
-                        ui.label('Devserver Fork Source Code').classes('text-xl font-semibold')
+                        ui.label('OSU Private server launcher Fork Source Code').classes('text-xl font-semibold')
                         ui.label('The source code of this fork').classes('text-sm text-gray-500')
                         ui.button('GitHub', icon='code', on_click=lambda: webbrowser.open("https://github.com/GamerSwir2/devserverlauncher")) \
                             .classes('bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2')
@@ -624,4 +624,4 @@ def main():
 
 
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(native=True, window_size=(970, 530), fullscreen=False, reload=False, title='M1PP Launcher', favicon=util.resource_path("icon.ico"), reconnect_timeout=99999, port=64821)
+    ui.run(native=True, window_size=(970, 530), fullscreen=False, reload=False, title='OSU Private server launcher', reconnect_timeout=99999, port=64821)
