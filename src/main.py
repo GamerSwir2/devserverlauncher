@@ -210,6 +210,7 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
             tosu_injected = False
             rp_injected = False
             presentosu = False
+
             if platform.system() == "Windows":
                 target = proc.poll()
             elif platform.system() == "Linux":
@@ -423,6 +424,7 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
         logging.debug("Re-enabling launch button and restoring UI state")
         lbtn.enable()
         progress_label.set_text('')
+
         set_tab_change_state(tabs, server_input, True)
         if platform.system() == "Linux":
             prefixmanager.kill_wineserver()
@@ -595,7 +597,6 @@ def main():
             ui.label('Mods').classes('text-xl font-bold gap-2')
             ui.switch('RelaxPatcher (rushiiMachine)', value="RelaxPatcher" in mods_enabled, on_change=lambda e: toggle_mod("RelaxPatcher", e.sender.value))
             ui.switch('tosu (tosu contributors)', value="tosu" in mods_enabled, on_change=lambda e: toggle_mod("tosu", e.sender.value))
-            ui.switch('AssetPatcher (M1PP)', value="AssetPatcher" in mods_enabled, on_change=lambda e: toggle_mod("AssetPatcher", e.sender.value))
             ui.label('Game enviroment').classes('text-xl font-bold gap-2')
             ui.switch('Separate osu! install (Required for now)', value=True).props('disable')
 

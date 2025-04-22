@@ -18,10 +18,10 @@ def ensure_config_file():
                     "launcher_hide_startup": True,
                     "launch_info": True,
                     "animations": True,
-                    "selected_server": "m1pposu.dev",
+                    "selected_server": "",
                     "osu_path": "",
                     "dark_mode": False,
-                    "mods_enabled": ["RelaxPatcher", "tosu", "AssetPatcher"]
+                    "mods_enabled": ["RelaxPatcher", "tosu"]
                 }
                 f.write(json.dumps(default_config, indent=4))
             return True
