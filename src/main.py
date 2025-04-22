@@ -536,7 +536,6 @@ def main():
     ui.page_title('M1PP Launcher')
     with ui.tabs().classes('w-full fade-animation') as tabs:
         ui.tab('a', label='Home').classes('px-12')
-        ui.tab('b', label='News').classes('px-12')
         ui.tab('c', label='Settings').classes('px-12')
         ui.tab('d', label='Runtime').classes('px-12')
         ui.tab('e', label='About').classes('px-12')
@@ -568,16 +567,6 @@ def main():
                     ui.label('Platform: {}'.format(platform.system()))
                     debug_mods = ui.label('Mods: {}'.format(configmanager.get_config_value("mods_enabled")))
                     debug_server = ui.label('Server: {}'.format(configmanager.get_config_value("selected_server")))
-        with ui.tab_panel('b'):
-            with ui.column().classes("h-full w-full align-middle flex justify-center items-center"):
-                ui.label('Latest News').classes('text-xl font-bold')
-                with ui.scroll_area().classes('space-y-0 py-0 w-full h-80 overflow-hidden'):
-                    with ui.column().classes('flex-grow w-full items-center justify-center'):
-                        for news in requests.get("https://launcher.m1pposu.dev/news.json").json():
-                            with ui.card().classes('w-full max-w-lg p-4'):
-                                ui.label(news["title"]).classes('text-xl font-bold gap-2')
-                                ui.label(news["content"])
-                                ui.button(news["button"], on_click=lambda: webbrowser.open(news["button_link"]))
         with ui.tab_panel('c'):
             value1 = configmanager.get_config_value("launcher_hide_startup")
             value2 = configmanager.get_config_value("launch_info")
