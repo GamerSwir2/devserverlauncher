@@ -139,45 +139,46 @@ async def async_bootstrap_osu(destination_folder):
                 raise InstallError("Could not create symlinks")
         except InstallError as e:
             raise InstallError("Failed to download osu! files") from e
+        with tempfile.TemporaryDirectory() as tmpdir:
+            enabled_mods = await asyncio.to_thread(configmanager.get_config_value, "mods_enabled")
+            if "tosu" in enabled_mods:
+                if not os.path.exists(os.path.join(destination_folder, "tosu.exe")):
+                    await download_and_extract(
+                        "https://github.com/tosuapp/tosu/releases/download/v4.4.3/tosu-windows-v4.4.3.zip",
+                        "tosu.zip",
+                        destination_folder,
+                        tmpdir
+                    )
+                    if not os.path.exists(os.path.join(destination_folder, "tosu.env")):
+                        with open(os.path.join(destination_folder, "tosu.env"), "w") as f:
+                            f.write(requests.get("https://raw.githubusercontent.com/4ayo-ovh/tosu/refs/heads/master/tosu.env").text)
+                    
 
-        if "tosu" in enabled_mods:
-            if not os.path.exists(os.path.join(destination_folder, "tosu.exe")):
-                await download_and_extract(
-                    "https://github.com/tosuapp/tosu/releases/download/v4.4.3/tosu-windows-v4.4.3.zip",
-                    "tosu.zip",
-                    destination_folder,
-                    tmpdir
+            if "RelaxPatcher" in enabled_mods:
+                if not os.path.exists(os.path.join(destination_folder, "relaxpatcher", "osu!.patcher.exe")):
+                    if platform.system() == "Windows":
+                        await download_and_extract(
+                            "https://github.com/4ayo-ovh/osu-patcher/releases/latest/download/relaxpatcher.zip",
+                            "relaxpatcher.zip",
+                            destination_folder,
+                            tmpdir
+                        )
+                    elif platform.system() == "Linux":
+                        await download_and_extract(
+                            "https://github.com/4ayo-ovh/osu-patcher-linux/releases/latest/download/relaxpatcher.zip",
+                            "relaxpatcher.zip",
+                            destination_folder,
+                            tmpdir
+                        )
+            if platform.system() == "Linux":
+                try:
+                    os.symlink(os.path.join(prefixmanager.default_location, "osu!m1pp"), os.path.join(prefixmanager.default_location, "osu-prefix", "dosdevices", "g:"))
+                except:
+                    pass
+                shutil.copyfile(
+                    util.resource_path("titledaemon.exe"),
+                    os.path.join(destination_folder, "titledaemon.exe")
                 )
-                if not os.path.exists(os.path.join(destination_folder, "tosu.env")):
-                    with open(os.path.join(destination_folder, "tosu.env"), "w") as f:
-                        f.write(requests.get("https://raw.githubusercontent.com/4ayo-ovh/tosu/refs/heads/master/tosu.env").text)
-                
-
-        if "RelaxPatcher" in enabled_mods:
-            if not os.path.exists(os.path.join(destination_folder, "relaxpatcher", "osu!.patcher.exe")):
-                if platform.system() == "Windows":
-                    await download_and_extract(
-                        "https://github.com/4ayo-ovh/osu-patcher/releases/latest/download/relaxpatcher.zip",
-                        "relaxpatcher.zip",
-                        destination_folder,
-                        tmpdir
-                    )
-                elif platform.system() == "Linux":
-                    await download_and_extract(
-                        "https://github.com/4ayo-ovh/osu-patcher-linux/releases/latest/download/relaxpatcher.zip",
-                        "relaxpatcher.zip",
-                        destination_folder,
-                        tmpdir
-                    )
-        if platform.system() == "Linux":
-            try:
-                os.symlink(os.path.join(prefixmanager.default_location, "osu!m1pp"), os.path.join(prefixmanager.default_location, "osu-prefix", "dosdevices", "g:"))
-            except:
-                pass
-            shutil.copyfile(
-                util.resource_path("titledaemon.exe"),
-                os.path.join(destination_folder, "titledaemon.exe")
-            )
 if __name__ == "__main__":
     configmanager.ensure_config_file()
     asyncio.run(async_bootstrap_osu(default_game_path))

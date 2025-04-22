@@ -82,24 +82,6 @@ def validate_config():
             sys.exit()
     selected_server = configmanager.get_config_value("selected_server").lower()
 
-    if selected_server == "ppy.sh":
-        util.win_message_box(
-            "We have detected that you modified the launcher config manually in order to connect to the official Bancho servers. "
-            "We disallow this to keep your account safe. Mods used here inject directly into the osu! process or even modify the game files. "
-            "Such actions are likely to trigger an autoban on Bancho.",
-            'WARNING',
-            util.MB_OK
-        )
-        sys.exit()
-    if selected_server not in {"m1pposu.dev", "4ayosu.ovh"}:
-        util.win_message_box(
-            "We have detected that you modified the launcher config manually in order to connect to unsupported servers. "
-            "Using some mods included here might result in a ban when used outside M1PP & 4ayo. Proceed with caution.",
-            'WARNING',
-            util.MB_OK
-        )
-        return
-
 app.on_startup(validate_config)
 
 
@@ -203,8 +185,8 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
                 proc = prefixmanager.open_wine_process(f"G:\\osu!.exe -devserver {server}")
             logging.debug("Started osu process with PID=%s", getattr(proc, 'pid', None))
             if configmanager.get_config_value("launcher_hide_startup"):
-                logging.debug("Hiding OSU Private server launcher window on startup")
-                set_window_visibility("OSU Private server launcher", False)
+                logging.debug("Hiding osu! Private server launcher window on startup")
+                set_window_visibility("osu! Private server launcher", False)
 
             tosu_injected = False
             rp_injected = False
@@ -429,8 +411,8 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
             prefixmanager.kill_wineserver()
             logging.debug("Killing wineserver")
         if configmanager.get_config_value("launcher_hide_startup"):
-            logging.debug("Restoring OSU Private server launcher window visibility")
-            set_window_visibility("OSU Private server launcher", True)
+            logging.debug("Restoring osu! Private server launcher window visibility")
+            set_window_visibility("osu! Private server launcher", True)
 
 def set_tab_change_state(tabs, server_input, state):
     if state:
@@ -532,7 +514,7 @@ def main():
     if configmanager.get_config_value("dark_mode"):
         ui.dark_mode().enable()
     ui.colors(primary='#e4ade4', brand='#ffc4ff')
-    ui.page_title('OSU Private server launcher')
+    ui.page_title('osu! Private server launcher')
     with ui.tabs().classes('w-full fade-animation') as tabs:
         ui.tab('a', label='Home').classes('px-12')
         ui.tab('c', label='Settings').classes('px-12')
@@ -593,7 +575,7 @@ def main():
                 with ui.column().classes('h-full w-full items-center justify-center'):
 
                     with ui.card().classes('w-96 shadow-lg'):
-                        ui.label('OSU Private server launcher Fork Source Code').classes('text-xl font-semibold')
+                        ui.label('osu! Private server launcher Fork Source Code').classes('text-xl font-semibold')
                         ui.label('The source code of this fork').classes('text-sm text-gray-500')
                         ui.button('GitHub', icon='code', on_click=lambda: webbrowser.open("https://github.com/GamerSwir2/devserverlauncher")) \
                             .classes('bg-blue-500 hover:bg-blue-600 text-white rounded-full px-4 py-2')
@@ -624,4 +606,4 @@ def main():
 
 
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(native=True, window_size=(970, 530), fullscreen=False, reload=False, title='OSU Private server launcher', reconnect_timeout=99999, port=64821)
+    ui.run(native=True, window_size=(970, 530), fullscreen=False, reload=False, title='osu! Private server launcher', reconnect_timeout=99999, port=64821)

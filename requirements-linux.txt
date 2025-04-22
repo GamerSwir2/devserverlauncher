@@ -8,4 +8,3 @@ psutil
 pyinstaller
 pycairo
 pygobject
-discord-rpc
