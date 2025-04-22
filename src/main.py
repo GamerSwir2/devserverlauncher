@@ -17,27 +17,7 @@ import bootstrapper
 import time
 import logging
 import re
-import discordrpc
-from discordrpc.button import Button
 
-rpc = discordrpc.RPC(app_id=1362913338866274354)
-
-button = Button(
-    button_one_label="Join M1PPosu",
-    button_one_url="https://dsc.gg/m1ppand4ayo",
-    button_two_label="Download M1PP Launcher",
-    button_two_url="https://m1pposudev.github.io/launcher"
-)
-
-try:
-    rpc.set_activity(
-        state="Active in launcher",
-        large_image="m1pp_mascot_standingpose-1",
-        large_text="M1ppo",
-        buttons=button
-    )
-except:
-    pass
 if platform.system() == "Linux":
     import prefixmanager
 
@@ -230,15 +210,6 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
             tosu_injected = False
             rp_injected = False
             presentosu = False
-            try:
-                rpc.set_activity(
-                    state="Playing osu!",
-                    large_image="m1pp_mascot_standingpose-1",
-                    large_text="M1ppo",
-                    buttons=button
-                )
-            except:
-                pass
             if platform.system() == "Windows":
                 target = proc.poll()
             elif platform.system() == "Linux":
@@ -343,7 +314,7 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
                                 startupinfo=startupinfo
                             )
                         elif platform.system() == "Linux":
-                            cmdstr = "G:\\tosu.exe"
+                            cmdstr = "G:\\\\tosu.exe"
 
                             prefixmanager.open_wine_process(cmdstr)
                         tosu_injected = True
@@ -452,15 +423,6 @@ async def launch_osu(tabs, server_input, lbtn, progress_label):
         logging.debug("Re-enabling launch button and restoring UI state")
         lbtn.enable()
         progress_label.set_text('')
-        try:
-            rpc.set_activity(
-                state="Active in launcher",
-                large_image="m1pp_mascot_standingpose-1",
-                large_text="M1ppo",
-                buttons=button
-            )
-        except:
-            pass
         set_tab_change_state(tabs, server_input, True)
         if platform.system() == "Linux":
             prefixmanager.kill_wineserver()
@@ -583,17 +545,17 @@ def main():
             global debug_server
             with ui.column().classes("h-96 w-full align-middle flex justify-center items-center overflow-hidden fade-animation"):
                 server_input = ui.input(
-                    label='Server Address', 
+                    label='Server Address',
                     value=configmanager.get_config_value("selected_server"),
                     validation={'Please enter a valid server address': lambda value: len(value) > 0}
                 ).classes('w-64')
-                
+
                 def on_server_change():
                     configmanager.set_config_value("selected_server", server_input.value)
                     debug_server.set_text('Server: {}'.format(server_input.value))
-                
+
                 server_input.on('blur', on_server_change)
-                
+
                 lbtn = ui.button('Launch', on_click=lambda: launch_handler(tabs, server_input, lbtn, progress_label)).classes('px-12 mt-7')
                 progress_label = ui.label('')
 
