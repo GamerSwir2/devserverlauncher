@@ -6,7 +6,6 @@ import aiohttp
 import aiofiles
 import aiofiles.os
 import configmanager
-import assetpatcher
 import zipfile
 import requests
 import tempfile
@@ -140,53 +139,6 @@ async def async_bootstrap_osu(destination_folder):
                 raise InstallError("Could not create symlinks")
         except InstallError as e:
             raise InstallError("Failed to download osu! files") from e
-
-    osu_asset_array = ["menu-osu@2x", "menu-osu"]
-    asset_endpoint = "https://assets.m1pposu.dev/launcher/m1pp/"
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        async with aiohttp.ClientSession() as session:
-            for asset in osu_asset_array:
-                asset_url = asset_endpoint + asset + ".png"
-                async with session.get(asset_url) as resp:
-                    asset_content = await resp.read()
-                tmp_asset_path = os.path.join(tmpdir, asset + ".png")
-                async with aiofiles.open(tmp_asset_path, 'wb') as f:
-                    await f.write(asset_content)
-
-        enabled_mods = await asyncio.to_thread(configmanager.get_config_value, "mods_enabled")
-        if "AssetPatcher" in enabled_mods:
-            target_dll = os.path.join(destination_folder, "osu!ui.dll")
-            output_temp = os.path.join(destination_folder, "osu!ui.temp")
-            
-            await asyncio.to_thread(
-                assetpatcher.patch_assets,
-                target_dll=target_dll,
-                asset_array=["menu-osu@2x", "menu-osu"],
-                asset_src_folder=tmpdir,
-                output_path=output_temp
-            )
-            old_dll_path = os.path.join(destination_folder, "osu!ui.dll")
-            await asyncio.to_thread(os.remove, old_dll_path)
-            await asyncio.to_thread(os.rename, output_temp, old_dll_path)
-        else:
-            update_data = requests.get(update_data_endpoint).json()
-            async with aiohttp.ClientSession() as session:
-                for file in update_data:
-                    if file["filename"] == "osu!ui.dll":
-                        os.remove(os.path.join(destination_folder, "osu!ui.dll"))
-                        total_bytes = 0
-                        chunk_size = 1024
-                        url = file["url_full"]
-                        destination_file = os.path.join(destination_folder, file["filename"])
-                        async with session.get(url) as response:
-                            async with aiofiles.open(destination_file, 'wb') as f:
-                                async for chunk in response.content.iter_chunked(chunk_size):
-                                    if chunk:
-                                        try:
-                                            await f.write(chunk)
-                                        except Exception as e:
-                                            raise InstallError(f"Failed to write chunk for {file['filename']}") from e
 
         if "tosu" in enabled_mods:
             if not os.path.exists(os.path.join(destination_folder, "tosu.exe")):
