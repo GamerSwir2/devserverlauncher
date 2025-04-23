@@ -71,7 +71,7 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 ### Linux
 1. `pacman -S mono git`
 2. `git clone https://github.com/M1PPosuDEV/m1pplauncher.git`
-3. cd into source code of program
+3. `cd m1pplauncher`
 4. `python3 -m venv venv`
 5. `chmod +x venv/bin/activate`
 6. `source venv/bin/activate`
