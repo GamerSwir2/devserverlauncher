@@ -40,7 +40,7 @@ In addition to core setup features, the launcher includes **a manager for commun
 To get a local copy up and running—and generate a standalone installer—follow these steps.
 You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the installer for Windows.
 
-### Prerequisites
+### Windows Prerequisites
 
 1. [Git for Windows](https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/Git-2.49.0-64-bit.exe)
 2. [Python 3.11.x](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
