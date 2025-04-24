@@ -99,7 +99,7 @@ Don't forget to give the project a star! Thanks again!
 
 This project is licensed under the **GNU General Public License v3.0**. See `LICENSE.txt` for more information.
 
-## Contact(https://github.com/GamerSwir2/devserverlauncher)
+## Contact
 
 Join our [Discord](https://dsc.gg/m1ppand4ayo)
 
