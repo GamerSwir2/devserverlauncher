@@ -40,7 +40,7 @@ In addition to core setup features, the launcher includes **a manager for commun
 To get a local copy up and running—and generate a standalone installer—follow these steps.
 You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the installer for Windows.
 
-### Prerequisites
+### Windows Prerequisites
 
 1. [Git for Windows](https://github.com/git-for-windows/git/releases/download/v2.49.0.windows.1/Git-2.49.0-64-bit.exe)
 2. [Python 3.11.x](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
@@ -52,7 +52,7 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 
 ### Windows
 **In Windows PowerShell**
-1. `git clone https://github.com/GamerSwir2/devserverlauncher.git`
+1. `git clone https://github.com/M1PPosuDEV/m1pplauncher.git`
 2. `cd m1pplauncher`
 3. `python -m venv venv`
 4. `.\venv\Scripts\Activate.ps1`
@@ -69,14 +69,13 @@ You'll be using `nicegui-pack` to bundle the app, and `NSIS` to create the insta
 8. `C:/Program\ Files\ \(x86\)/NSIS/Bin/makensis.exe install.nsi` (Installer, optional)
 
 ### Linux
-1. `pacman -S mono git`
-2. `git clone https://github.com/GamerSwir2/devserverlauncher.git`
-3. cd into source code of program
+1. `sudo apt-get install mono-complete git zenity` (adjust this to your distro's package manager)
+2. `git clone https://github.com/M1PPosuDEV/m1pplauncher.git`
+3. `cd m1pplauncher`
 4. `python3 -m venv venv`
-5. `chmod +x venv/bin/activate`
-6. `source venv/bin/activate`
-7. `pip install -r requirements-linux.txt`
-8. `./build-linux.sh`
+5. `source venv/bin/activate`
+6. `pip install -r requirements-linux.txt`
+7. `./build-linux.sh`
 
 ## Roadmap
 
