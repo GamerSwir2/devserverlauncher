@@ -99,7 +99,7 @@ Don't forget to give the project a star! Thanks again!
 
 This project is licensed under the **GNU General Public License v3.0**. See `LICENSE.txt` for more information.
 
-## Contact
+## Contacthttps://github.com/jbevain/cecil](https://github.com/M1PPosuDEV/m1pplauncher)
 
 Join our [Discord](https://dsc.gg/m1ppand4ayo)
 
@@ -107,3 +107,4 @@ Join our [Discord](https://dsc.gg/m1ppand4ayo)
 
 [README Template](https://github.com/othneildrew/Best-README-Template)
 [Mono.Cecil](https://github.com/jbevain/cecil)
+[M1PP Launcherl](https://github.com/M1PPosuDEV/m1pplauncher)
